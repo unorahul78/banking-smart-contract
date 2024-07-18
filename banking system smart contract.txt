@@ -1,0 +1,58 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+contract ApnaBank {
+    address public owner;
+    uint256 public accountCounter;
+
+    struct Account {
+        uint256 accountNumber;
+        string name;
+        uint256 balance;
+    }
+
+    mapping(address => Account) public updatedaccounts;
+
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Only the owner can add account");
+        _;
+    }
+
+    modifier accountExists(address accountHolder) {
+        require(updatedaccounts[accountHolder].accountNumber != 0, "Account does not exist");
+        _;
+    }
+
+    constructor() {
+        owner = msg.sender;
+        accountCounter = 0;
+    }
+
+    function addAccount(address _accountHolder, string memory _name) public onlyOwner {
+        require(updatedaccounts[_accountHolder].accountNumber == 0, "Account already exists for this address");
+        accountCounter++;
+
+        updatedaccounts[_accountHolder] = Account(accountCounter, _name, 0);
+        
+
+    }
+
+    function depositmoney() public payable accountExists(msg.sender) {
+        require(msg.value > 0 , "deposite amount must larger than 0");
+        updatedaccounts[msg.sender].balance += msg.value;
+    }
+
+    function transfer(address _to, uint256 _amount) public accountExists(msg.sender) accountExists(_to) {
+        require(updatedaccounts[msg.sender].balance >= _amount, "Insufficient balance");
+
+        updatedaccounts[msg.sender].balance -= _amount;
+        updatedaccounts[_to].balance += _amount;
+
+    }
+
+    function getAccountDetails(address _accountHolder) public view returns (uint256 accNumber, string memory Name, uint256 balanace) {
+        Account memory account = updatedaccounts[_accountHolder];
+        return (account.accountNumber, account.name, account.balance);
+    }
+}
